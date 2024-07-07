@@ -1,0 +1,14 @@
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\bin\Debug\net7.0\TerminalCheckers.exe
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\bin\Debug\net7.0\TerminalCheckers.deps.json
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\bin\Debug\net7.0\TerminalCheckers.runtimeconfig.json
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\bin\Debug\net7.0\TerminalCheckers.dll
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\bin\Debug\net7.0\TerminalCheckers.pdb
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.GeneratedMSBuildEditorConfig.editorconfig
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.AssemblyInfoInputs.cache
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.AssemblyInfo.cs
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.csproj.CoreCompileInputs.cache
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.dll
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\refint\TerminalCheckers.dll
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.pdb
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\TerminalCheckers.genruntimeconfig.cache
+D:\+Projects\Csharp\TerminalCheckers\TerminalCheckers\obj\Debug\net7.0\ref\TerminalCheckers.dll
