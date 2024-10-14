@@ -24,17 +24,19 @@ class Game
     int chosenPieceX = 0;
     int chosenPieceY = 0;
     char currPlayer;
+    char currPlayerQueen;
     char empty = '0';
-    char plr1 = '1';
-    char plr2 = '2';
+    char plr1 = 'b';
+    char plr2 = 'r';
     ConsoleColor defColor;
     ConsoleColor defBgColor;
     int bg1Color = 233;
     int bg1ColorSelected = 24;
     int bg2Color = 237;
     int bg2ColorSelected = 24;
-    int p1Color = 0;
-    int p2Color = 124;
+    int p1Color = 254;
+    int p2Color = 9;
+    int highlightColor = 25;
     bool lastMoveWasJump = false;
 
     struct coords
@@ -72,12 +74,23 @@ class Game
 
     }
 
+    void EmptyBoard()
+    {
+        for (int i = 0; i < board.GetLength(0); i++)
+        {
+            for (int j = 0; j < board.GetLength(1); j++)
+            {
+                board[i, j] = empty; // Empty squares
+            }
+        }
+    }
+
     public void Draw()
     {
 
         for (int i = 0; i < board.GetLength(0); i++)
         {
-            Console.Write("\u001b[38;5;4m" + (i) + " ");
+            Console.Write("\u001b[38;5;"+highlightColor+"m" + (i) + " ");
             for (int j = 0; j < board.GetLength(0); j++)
             {
 
@@ -106,28 +119,40 @@ class Game
 
 
 
-                if (board[i, j] == '1')
+                if (board[i, j] == 'b')
                 {
                     Console.Write("\u001b[38;5;" + p1Color + "m");
-                    Console.Write("◉︎ ");
+                    Console.Write("◉︎");
                 }
-                else if (board[i, j] == '2')
+                else if (board[i, j] == 'r')
                 {
                     Console.Write("\u001b[38;5;" + p2Color + "m");
-                    Console.Write("◉︎ ");
+                    Console.Write("◉︎");
                 }
-                else if (board[i, j] == 'x')
+                else if (board[i, j] == 'B')
                 {
-                    Console.Write("\u001b[38;5;" + 222 + "m ?");
+                    Console.Write("\u001b[38;5;" + p1Color + "m");
+                    Console.Write("♛ ");
                 }
+                else if (board[i, j] == 'R')
+                {
+                    Console.Write("\u001b[38;5;" + p2Color + "m");
+                    Console.Write("♛ ");
+                }
+
                 else
                 {
                     bool needsSpace = true;
+                    bool alreadyDrawn = false;
                     foreach (coords k in moveHighlights)
                     {
                         if (i == k.y && j == k.x)
                         {
-                            Console.Write("\u001b[38;5;" + 222 + "m ?");
+                            if (!alreadyDrawn)
+                            {
+                                Console.Write("\u001b[38;5;" + 222 + "m ?");
+                                alreadyDrawn = true;
+                            }
                             needsSpace = false;
                         }
                     }
@@ -141,9 +166,21 @@ class Game
             Console.BackgroundColor = defBgColor;
             Console.WriteLine();
         }
-        Console.WriteLine("\u001b[38;5;4m  0 1 2 3 4 5 6 7");
+        Console.WriteLine("\u001b[38;5;"+highlightColor+"m  0 1 2 3 4 5 6 7");
         Console.ForegroundColor = defColor;
         Console.BackgroundColor = defBgColor;
+    }
+
+    private void PromoteToQueen(int x, int y, char playerPiece)
+    {
+        if (playerPiece == 'r' && y == 0)
+        {
+            board[y, x] = 'R'; // Red queen
+        }
+        else if (playerPiece == 'b' && y == boardSize - 1)
+        {
+            board[y, x] = 'B'; // Black queen
+        }
     }
 
 
@@ -163,7 +200,7 @@ class Game
                 int middleX = x + dx[i] / 2;
                 int middleY = y + dy[i] / 2;
 
-                if (board[middleY, middleX] != '0' && board[middleY, middleX] != playerPiece)
+                if (board[middleY, middleX] != '0' && board[middleY, middleX] != playerPiece && board[middleY, middleX] != currPlayerQueen)
                 {
                     message += "Can jump at " + x + " " + y + " to " + newX + " " + newY + "\n";
                     return true;
@@ -179,7 +216,7 @@ class Game
         {
             for (int j = 0; j < boardSize; j++)
             {
-                if (board[i, j] == playerPiece && CanJump(j, i, playerPiece))
+                if (((board[i, j] == playerPiece) || (board[i, j] == currPlayerQueen)) && CanJump(j, i, playerPiece))
                 {
                     return true;
                 }
@@ -190,83 +227,263 @@ class Game
 
     private bool MovePiece(int startX, int startY, int endX, int endY, char playerPiece)
     {
-        //regular figure
+
+        bool isQueen = (board[startY, startX] == currPlayerQueen);
+        message += isQueen + "\n";
+
+
+    
         if (endX >= boardSize || endY >= boardSize || board[endY, endX] != '0')
         {
             return false;
         }
-        //regular move
+        
         int deltaX = endX - startX;
         int deltaY = endY - startY;
-        int desiredYDelta = -1;
-        if (playerPiece == '1')
+        
+        if (deltaX == 0 || deltaY == 0)
         {
-            desiredYDelta = 1;
+            return false;
         }
 
-        if (Math.Abs(deltaX) == 1 && deltaY == desiredYDelta && board[endY, endX] == '0')
+		//jump move
+		if (Math.Abs(deltaX) == 2 && Math.Abs(deltaY) == 2)
+		{
+			message += "The attempted move was a jump move \n";
+			int middleX = startX + deltaX / 2;
+			int middleY = startY + deltaY / 2;
+
+			if (board[middleY, middleX] != '0' && board[middleY, middleX] != playerPiece && board[middleY, middleX] != currPlayerQueen)
+			{
+                if (isQueen)
+                {
+                    board[endY, endX] = currPlayerQueen;
+                }
+                else
+                {
+                    board[endY, endX] = playerPiece;
+                }
+				board[startY, startX] = '0';
+				board[middleY, middleX] = '0';
+				lastMoveWasJump = true;
+				PromoteToQueen(endX, endY, playerPiece);
+				return true;
+			}
+		}
+
+		//regular move
+		if (!isQueen)
         {
-            if (HasForcedJump(playerPiece))
+            int desiredYDelta = -1;
+            if (playerPiece == 'b')
             {
-                return false;
+                desiredYDelta = 1;
             }
-            board[endY, endX] = playerPiece;
-            board[startY, startX] = '0';
-            lastMoveWasJump = false;
-            return true;
-        }
 
-
-        //jump move
-        if (Math.Abs(deltaX) == 2 && Math.Abs(deltaY) == 2)
-        {
-            int middleX = startX + deltaX / 2;
-            int middleY = startY + deltaY / 2;
-
-            if (board[middleY, middleX] != '0' && board[middleY, middleX] != playerPiece)
+            if (Math.Abs(deltaX) == 1 && deltaY == desiredYDelta && board[endY, endX] == '0')
             {
+                if (HasForcedJump(playerPiece))
+                {
+                    return false;
+                }
                 board[endY, endX] = playerPiece;
                 board[startY, startX] = '0';
-                board[middleY, middleX] = '0';
-                lastMoveWasJump = true;
+                lastMoveWasJump = false;
+                PromoteToQueen(endX, endY, playerPiece);
                 return true;
             }
         }
+        //queen move
+        else
+        {
+            if (HasForcedJump(playerPiece)){
+                return false;
+            }
+            if (Math.Abs(deltaX) != Math.Abs(deltaY)) { return false; }
+            
+            int stepX = deltaX / Math.Abs(deltaX);
+            int stepY = deltaY / Math.Abs(deltaY);
+
+            for (int i = 1; i < Math.Abs(deltaX); i++)
+            {
+                if (board[startY + i * stepY, startX + i * stepX] != '0')
+                {
+                    return false;
+                }
+            }
+
+            if (currPlayer == 'r')
+            {
+                board[endY, endX] = 'R';
+            }
+            else
+            {
+                board[endY, endX] = 'B';
+            }
+			lastMoveWasJump = false;
+			board[startY, startX] = '0';
+            return true;
+        }
+        
+
+        
 
 
         return false;
     }
 
-    void showMoves(int startX, int startY, char playerPiece)
+    void showMoves_(int startX, int startY, char playerPiece)
     {
         int desiredYDelta = -1;
-        if (playerPiece == '1')
+        if (playerPiece == 'b')
         {
             desiredYDelta = 1;
         }
         moveHighlights.Add(new coords(startX + 1, startY + desiredYDelta));
         moveHighlights.Add(new coords(startX - 1, startY + desiredYDelta));
+        
     }
 
-    public void Start()
+	public void showMoves(int startX, int startY, char playerPiece)
+	{
+		moveHighlights.Clear();
+		char piece = board[startY, startX];
+
+		if (piece == '0' || (piece != 'r' && piece != 'b' && piece != 'R' && piece != 'B'))
+		{
+			return ;
+		}
+
+		bool isQueen = piece == 'R' || piece == 'B';
+		char opponentPiece = piece == 'r' || piece == 'R' ? 'b' : 'r';
+		char opponentQueen = piece == 'r' || piece == 'R' ? 'B' : 'R';
+
+		// Define directions for normal and jump moves
+		int[] normalDx, normalDy, jumpDx, jumpDy;
+
+		if (isQueen)
+		{
+			normalDx = new int[] { -1, -1, 1, 1 };
+			normalDy = new int[] { -1, 1, -1, 1 };
+		}
+		else if (piece == 'r')
+		{
+			normalDx = new int[] { 1, -1 };
+			normalDy = new int[] { -1, -1 };
+		}
+		else // piece == 'b'
+		{
+			normalDx = new int[] { 1, -1 };
+			normalDy = new int[] { 1, 1 };
+		}
+
+		// Jumps can be in all directions for non-queens
+		jumpDx = new int[] { -2, -2, 2, 2 };
+		jumpDy = new int[] { -2, 2, -2, 2 };
+
+		// Regular moves for non-queens
+		for (int i = 0; i < normalDx.Length; i++)
+		{
+			int newX = startX + normalDx[i];
+			int newY = startY + normalDy[i];
+			if (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize && board[newY, newX] == '0')
+			{
+                if (!HasForcedJump(playerPiece))
+                {
+                    moveHighlights.Add(new coords(newX, newY));
+                }
+			}
+		}
+
+		// Jump moves for all pieces
+		for (int i = 0; i < jumpDx.Length; i++)
+		{
+			int jumpX = startX + jumpDx[i];
+			int jumpY = startY + jumpDy[i];
+			int middleX = startX + jumpDx[i] / 2;
+			int middleY = startY + jumpDy[i] / 2;
+			if (jumpX >= 0 && jumpX < boardSize && jumpY >= 0 && jumpY < boardSize &&
+				(board[middleY, middleX] == opponentPiece || board[middleY, middleX] == opponentQueen) &&
+				board[jumpY, jumpX] == '0')
+			{
+				moveHighlights.Clear();
+				moveHighlights.Add(new coords(jumpX, jumpY));
+			}
+		}
+
+		// Queen moves
+		if (isQueen)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				int stepX = normalDx[i];
+				int stepY = normalDy[i];
+				int newX = startX + stepX;
+				int newY = startY + stepY;
+
+				while (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize)
+				{
+					if (board[newY, newX] == '0')
+
+					{
+						if (!HasForcedJump(playerPiece))
+							moveHighlights.Add(new coords(newX, newY));
+					}
+					else if (board[newY, newX] == opponentPiece || board[newY, newX] == opponentQueen)
+					{
+						int jumpX = newX + stepX;
+						int jumpY = newY + stepY;
+						if (jumpX >= 0 && jumpX < boardSize && jumpY >= 0 && jumpY < boardSize && board[jumpY, jumpX] == ' ')
+						{
+                            moveHighlights.Clear();
+							moveHighlights.Add(new coords(jumpX, jumpY));
+						}
+						break;
+					}
+					else
+					{
+						break;
+					}
+
+					newX += stepX;
+					newY += stepY;
+				}
+			}
+		}
+
+		return;
+	}
+
+
+
+
+
+public void Start()
     {
         Init();
-        currPlayer = '2';
+        currPlayer = 'r';
         moveState state = moveState.pieceSelection;
         cursorY = 5;
         cursorX = 0;
         while (true)
         {
             Console.Clear();
-
+            if (currPlayer == 'r')
+            {
+                currPlayerQueen = 'R';
+            }
+            else
+            {
+                currPlayerQueen = 'B';
+            }
             Draw();
             Console.Write(message);
             message = "";
             //Console.WriteLine(currPlayer);
-            Console.WriteLine((currPlayer == '2') ? "Red's turn" : "Black's turn");
+            Console.WriteLine((currPlayer == 'r') ? "Red's turn" : "Black's turn");
             if (state == moveState.pieceSelection)
             {
-                Console.Write("Select the piece ( WASD to move cursor, X to select)");
+                Console.Write("Select the piece ( WASD to move cursor, X to select, N to start a new game)");
                 ConsoleKeyInfo key = Console.ReadKey();
                 char keyChar = key.KeyChar;
 
@@ -284,9 +501,18 @@ class Game
                     case 'd':
                         if (cursorX < 8) cursorX++;
                         break;
+                    case 'b':
+                        board[cursorY, cursorX] = currPlayerQueen;
+                        break;
+                    case 'v':
+                        board[cursorY, cursorX] = '0';
+                        break;
+                    case 'n':
+                        Init();
+                        break;
                     case 'x':
 
-                        if (board[cursorY, cursorX] != currPlayer)
+                        if (board[cursorY, cursorX] != currPlayer && board[cursorY, cursorX] != currPlayerQueen)
                         {
                             message += "\u001b[38;5;124mIncorrect cell!\n";
                             Console.ForegroundColor = defColor;
@@ -332,13 +558,14 @@ class Game
                             }
                             else
                             {
-                                if (currPlayer == '2') { currPlayer = '1'; }
+                                if (currPlayer == 'r') { currPlayer = 'b'; }
                                 else
-                                if (currPlayer == '1') { currPlayer = '2'; };
+                                if (currPlayer == 'b') { currPlayer = 'r'; };
 
                             }
                             state = moveState.pieceSelection;
-                            moveHighlights = new ArrayList();
+                            moveHighlights.Clear();
+                            
                         }
                         else
                         {
@@ -346,23 +573,10 @@ class Game
                         }
                         break;
                     case 'c':
-                        if (currPlayer == '2')
-                        {
-                            if (((chosenPieceY - 1) > 0) && ((chosenPieceX + 1) < board.GetLength(0)))
-                            {
-                                if (board[chosenPieceY - 1, chosenPieceX + 1] == 'x')
-                                    board[chosenPieceY - 1, chosenPieceX + 1] = '0';
-                            }
 
-                            if (((chosenPieceY - 1) > 0) && ((chosenPieceX - 1) > 0))
-                            {
-                                if (board[chosenPieceY - 1, chosenPieceX - 1] == 'x')
-                                    board[chosenPieceY - 1, chosenPieceX - 1] = '0';
-                            }
-                        }
 
                         state = moveState.pieceSelection;
-                        moveHighlights = new ArrayList();
+                        moveHighlights.Clear();
                         break;
                 }
             }
